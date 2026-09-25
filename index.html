@@ -261,7 +261,7 @@
             
             <!-- 圓形抽獎按鈕 -->
             <button class="draw-btn" id="draw-btn">
-                <span id="draw-btn-text">DRAW</span>
+                <span id="draw-btn-text">抽獎</span>
                 <div class="spinner" id="draw-spinner"></div>
             </button>
 
@@ -274,7 +274,7 @@
             </div>
 
             <!-- 進度文字 -->
-            <div class="progress-text" id="progress-text">0 of 11 gifts claimed</div>
+            <div class="progress-text" id="progress-text">已獲得0份獎品</div>
         </div>
 
     </div>
@@ -370,8 +370,8 @@
             const drawBtn = document.getElementById('draw-btn');
             
             if (claimed >= 11) {
-                document.getElementById('main-title').innerText = "All Gifts Claimed!";
-                document.getElementById('sub-title').innerText = "Happy Birthday!";
+                document.getElementById('main-title').innerText = "所有禮物已經抽完!";
+                document.getElementById('sub-title').innerText = "恭祝你福壽生日快樂wow!";
                 drawBtn.style.display = 'none';
             } else if (userData.lastDrawDate === today) {
                 document.getElementById('main-title').innerText = "請明天再來。";
