@@ -241,12 +241,12 @@
         
         <!-- 登入遮罩 -->
         <div id="login-overlay">
-            <h1 class="main-title">專屬禮物</h1>
+            <h1 class="main-title">國王誕大抽獎</h1>
             <p class="sub-title">請登入以同步進度</p>
             <button class="apple-login-btn" id="login-btn">使用 Google 帳號登入</button>
         </div>
 
-        <div class="header-label">LUCKY DRAW</div>
+        <div class="header-label">國王誕大抽獎</div>
         
         <h1 class="main-title" id="main-title">Your gift awaits.</h1>
         <p class="sub-title" id="sub-title"><span id="remaining-count">11</span> gifts remaining · tap to reveal yours</p>
@@ -311,8 +311,8 @@
             { name: "iPhone 16", sub: "Pro Max", icon: "📱" },          // 2
             { name: "MacBook Air", sub: "M3 Chip", icon: "💻" },        // 3
             { name: "Game Controller", sub: "PlayStation", icon: "🎮" },// 4
-            { name: "Coffee Maker", sub: "Nespresso Vertuo", icon: "☕" }, // 5
-            { name: "Gift Card", sub: "Apple Store", icon: "🛍️" },        // 6
+            { name: "圓軲轆", sub: "精美XXX", icon: "☕" }, // 5
+            { name: "師兄呀", sub: "JFFT同款", icon: "🛍️" },        // 6
             { name: "Camera", sub: "Sony A7IV", icon: "📷" },           // 7
             { name: "Mystery Box", sub: "Surprise!", icon: "🎁" },      // 8
             { name: "HomePod mini", sub: "Smart Speaker", icon: "🎵" },  // 9
@@ -374,8 +374,8 @@
                 document.getElementById('sub-title').innerText = "Happy Birthday!";
                 drawBtn.style.display = 'none';
             } else if (userData.lastDrawDate === today) {
-                document.getElementById('main-title').innerText = "Come back tomorrow.";
-                document.getElementById('sub-title').innerText = "You have already claimed today's gift.";
+                document.getElementById('main-title').innerText = "請明天再來。";
+                document.getElementById('sub-title').innerText = "今天的禮物已抽完。";
                 drawBtn.style.opacity = '0.5';
                 drawBtn.style.pointerEvents = 'none';
             }
@@ -420,7 +420,7 @@
             if (userData.lastDrawDate === today || userData.drawCount >= 11) return;
 
             // 1. 改變介面狀態為 Drawing...
-            document.getElementById('main-title').innerText = "Drawing...";
+            document.getElementById('main-title').innerText = "抽取中...";
             document.getElementById('sub-title').style.opacity = '0';
             
             const btnText = document.getElementById('draw-btn-text');
@@ -444,8 +444,8 @@
                 await setDoc(userRef, userData);
                 
                 // 4. 顯示中獎結果 UI
-                document.getElementById('main-title').innerText = "Congratulations!";
-                document.getElementById('sub-title').innerHTML = `You've won <b>${wonPrize.name}</b>.`;
+                document.getElementById('main-title').innerText = "恭喜!";
+                document.getElementById('sub-title').innerHTML = `國王成功獲得 <b>${wonPrize.name}</b>.`;
                 document.getElementById('sub-title').style.opacity = '1';
                 
                 // 將該方塊設為 Claimed 狀態，移除 Spotlight
