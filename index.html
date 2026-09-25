@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Surprise Draw</title>
+    <style>
+        /* Apple Minimal 風格 CSS */
+        :root {
+            --bg-color: #f5f5f7;
+            --card-bg: #ffffff;
+            --text-main: #1d1d1f;
+            --text-secondary: #86868b;
+            --apple-blue: #0071e3;
+            --apple-blue-hover: #0077ED;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px; /* 適合手機的寬度 */
+            padding: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            text-align: center;
+            display: none; /* 預設隱藏，由 JS 控制顯示 */
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .card.active {
+            display: block;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        /* 禮物進度小點點設計 */
+        .gift-progress {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #e5e5ea;
+        }
+
+        .dot.opened {
+            background-color: var(--apple-blue);
+        }
+
+        button {
+            background-color: var(--apple-blue);
+            color: white;
+            border: none;
+            border-radius: 980px; /* 蘋果經典全圓角按鈕 */
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background-color: #d2d2d7;
+            cursor: not-allowed;
+            color: #ffffff;
+        }
+
+        .prize-result {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--apple-blue);
+            margin: 40px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 登入介面 -->
+        <div id="login-screen" class="card active">
+            <h1>專屬驚喜</h1>
+            <p class="subtitle">請先登入以同步你的抽獎進度</p>
+            <button id="login-btn">Google 一鍵登入</button>
+        </div>
+
+        <!-- 主介面 -->
+        <div id="main-screen" class="card">
+            <h1>每日抽獎</h1>
+            <p class="subtitle" id="status-text">還有 11 份禮物等你揭曉</p>
+            
+            <div class="gift-progress" id="progress-container">
+                <!-- 這裡會用 JS 動態生成 11 個點點 -->
+            </div>
+
+            <button id="draw-btn">抽取今日禮物</button>
+        </div>
+
+        <!-- 中獎結果介面 -->
+        <div id="result-screen" class="card">
+            <h1>恭喜獲得</h1>
+            <div class="prize-result" id="prize-text">獎品名稱</div>
+            <p class="subtitle">請截圖保留，明天同一時間再來！</p>
+            <button id="back-btn">返回主頁</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (Modular v9) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        // 【重點 1】把你在 Firebase 複製的 Config 貼在下面覆蓋這段
+        const firebaseConfig = {
+            apiKey: "AIzaSyAniXdJAJQxmO3HgXoXdwq34tK6k2FCdTQ",
+            authDomain: "project-5735141468841480223.firebaseapp.com",
+            projectId: "project-5735141468841480223",
+            storageBucket: "project-5735141468841480223.firebasestorage.app",
+            messagingSenderId: "59290312818",
+            appId: "1:59290312818:web:d1c82814ec9c2f1e6de2eb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 【重點 2】設定 11 份禮物的固定順序 (非常適合準備給 32 歲生日的系列驚喜)
+        const prizes = [
+            "精美手作卡片", 
+            "高級晚餐兌換券", 
+            "肩頸按摩 30 分鐘", 
+            "神祕小禮盒", 
+            "電影之夜選擇權", 
+            "指定甜點一份", 
+            "跑腿免死金牌一次", 
+            "一番賞小公仔", 
+            "週末微旅行", 
+            "隱藏版大驚喜", 
+            "終極 32 歲生日大禮"
+        ];
+
+        let currentUser = null;
+        let userData = null;
+
+        // UI 元素綁定
+        const loginScreen = document.getElementById('login-screen');
+        const mainScreen = document.getElementById('main-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const drawBtn = document.getElementById('draw-btn');
+        const progressContainer = document.getElementById('progress-container');
+
+        // 切換介面函數
+        function showScreen(screen) {
+            loginScreen.classList.remove('active');
+            mainScreen.classList.remove('active');
+            resultScreen.classList.remove('active');
+            screen.classList.add('active');
+        }
+
+        // 登入邏輯
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider).catch(error => alert("登入失敗: " + error.message));
+        });
+
+        // 監聽登入狀態
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadUserData();
+                showScreen(mainScreen);
+            } else {
+                showScreen(loginScreen);
+            }
+        });
+
+        // 讀取/初始化資料庫進度
+        async function loadUserData() {
+            const userRef = doc(db, "users", currentUser.uid);
+            const docSnap = await getDoc(userRef);
+            
+            if (docSnap.exists()) {
+                userData = docSnap.data();
+            } else {
+                // 第一次登入，初始化資料
+                userData = { drawCount: 0, lastDrawDate: "" };
+                await setDoc(userRef, userData);
+            }
+            updateMainUI();
+        }
+
+        // 獲取今天日期 (格式: YYYY-MM-DD)
+        function getTodayString() {
+            const today = new Date();
+            return `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
+        }
+
+        // 更新主介面狀態
+        function updateMainUI() {
+            const today = getTodayString();
+            
+            // 繪製 11 個點點
+            progressContainer.innerHTML = '';
+            for(let i = 0; i < 11; i++) {
+                const dot = document.createElement('div');
+                dot.className = i < userData.drawCount ? 'dot opened' : 'dot';
+                progressContainer.appendChild(dot);
+            }
+
+            document.getElementById('status-text').innerText = `已拆開 ${userData.drawCount} / 11 份驚喜`;
+
+            // 判斷按鈕狀態
+            if (userData.drawCount >= 11) {
+                drawBtn.innerText = "所有驚喜已領取完畢";
+                drawBtn.disabled = true;
+            } else if (userData.lastDrawDate === today) {
+                drawBtn.innerText = "今日已抽，明天 00:00 再來";
+                drawBtn.disabled = true;
+            } else {
+                drawBtn.innerText = "抽取今日禮物";
+                drawBtn.disabled = false;
+            }
+        }
+
+        // 抽獎點擊事件
+        drawBtn.addEventListener('click', async () => {
+            const today = getTodayString();
+            if (userData.lastDrawDate === today || userData.drawCount >= 11) return;
+
+            drawBtn.innerText = "讀取中...";
+            drawBtn.disabled = true;
+
+            // 取出今天的固定獎品
+            const currentPrize = prizes[userData.drawCount];
+
+            // 更新資料到 Firebase
+            userData.drawCount += 1;
+            userData.lastDrawDate = today;
+            const userRef = doc(db, "users", currentUser.uid);
+            await setDoc(userRef, userData);
+
+            // 切換到結果畫面
+            document.getElementById('prize-text').innerText = currentPrize;
+            showScreen(resultScreen);
+        });
+
+        // 返回主頁
+        document.getElementById('back-btn').addEventListener('click', () => {
+            updateMainUI();
+            showScreen(mainScreen);
+        });
+    </script>
+</body>
+</html>
