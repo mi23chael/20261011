@@ -286,7 +286,7 @@
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
         // ==========================================
-        // 1. Firebase Config (請替換為你的設定)
+        // 1. Firebase Config
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyAniXdJAJQxmO3HgXoXdwq34tK6k2FCdTQ",
@@ -302,22 +302,26 @@
         const db = getFirestore(app);
 
         // ==========================================
-        // 2. 禮物清單設定 (依序派發)
-        // 你可以把 icon 換成圖片網址，例如 `<img src="apple.png" width="28">`
+        // 2. 禮物清單設定 & 抽獎劇本
         // ==========================================
+        // 這是畫面上「視覺顯示」的順序（從左上到右下）
         const PRIZES = [
-            { name: "AirPods Pro", sub: "Apple", icon: "🎧" },
-            { name: "Apple Watch", sub: "Series 10", icon: "⌚" },
-            { name: "iPhone 16", sub: "Pro Max", icon: "📱" },
-            { name: "MacBook Air", sub: "M3 Chip", icon: "💻" },
-            { name: "Game Controller", sub: "PlayStation", icon: "🎮" },
-            { name: "Coffee Maker", sub: "Nespresso Vertuo", icon: "☕" },
-            { name: "Gift Card", sub: "Apple Store", icon: "🛍️" },
-            { name: "Camera", sub: "Sony A7IV", icon: "📷" },
-            { name: "Mystery Box", sub: "Surprise!", icon: "🎁" },
-            { name: "HomePod mini", sub: "Smart Speaker", icon: "🎵" },
-            { name: "Smart Light", sub: "Philips Hue", icon: "💡" }
+            { name: "AirPods Pro", sub: "Apple", icon: "🎧" },         // 0
+            { name: "Apple Watch", sub: "Series 10", icon: "⌚" },      // 1
+            { name: "iPhone 16", sub: "Pro Max", icon: "📱" },          // 2
+            { name: "MacBook Air", sub: "M3 Chip", icon: "💻" },        // 3
+            { name: "Game Controller", sub: "PlayStation", icon: "🎮" },// 4
+            { name: "Coffee Maker", sub: "Nespresso Vertuo", icon: "☕" }, // 5
+            { name: "Gift Card", sub: "Apple Store", icon: "🛍️" },        // 6
+            { name: "Camera", sub: "Sony A7IV", icon: "📷" },           // 7
+            { name: "Mystery Box", sub: "Surprise!", icon: "🎁" },      // 8
+            { name: "HomePod mini", sub: "Smart Speaker", icon: "🎵" },  // 9
+            { name: "Smart Light", sub: "Philips Hue", icon: "💡" }     // 10
         ];
+
+        // 這是「實際中獎」的順序劇本 (填入上方 PRIZES 的對應數字)
+        // 你可以隨意修改裡面的數字順序，來決定每天會抽中哪一個
+        const drawSequence = [5, 0, 8, 2, 4, 1, 9, 7, 3, 10, 6]; 
 
         let currentUser = null;
         let userData = { drawCount: 0, lastDrawDate: "" };
@@ -334,8 +338,10 @@
                 item.className = 'gift-item';
                 item.id = `gift-${index}`;
                 
-                // 判斷是否已被領取
-                const isClaimed = index < userData.drawCount;
+                // 判斷是否已被領取 (根據抽獎劇本)
+                const drawnIndices = drawSequence.slice(0, userData.drawCount);
+                const isClaimed = drawnIndices.includes(index);
+                
                 if (isClaimed) item.classList.add('claimed');
 
                 item.innerHTML = `
@@ -423,8 +429,8 @@
             spinner.style.display = 'block';
             document.getElementById('draw-btn').style.pointerEvents = 'none';
 
-            // 目標獎品 Index (按順序)
-            const targetIndex = userData.drawCount;
+            // 目標獎品 Index (從抽獎劇本中取出)
+            const targetIndex = drawSequence[userData.drawCount];
             const wonPrize = PRIZES[targetIndex];
 
             // 2. 執行聚光燈動畫
@@ -450,7 +456,7 @@
                 // 隱藏 Draw 按鈕，顯示 Result Card
                 document.getElementById('draw-btn').style.display = 'none';
                 
-                document.getElementById('result-icon').innerText = wonPrize.icon;
+                document.getElementById('result-icon').innerHTML = wonPrize.icon;
                 document.getElementById('result-title').innerText = wonPrize.name;
                 document.getElementById('result-sub').innerText = wonPrize.sub;
                 
