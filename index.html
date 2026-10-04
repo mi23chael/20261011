@@ -232,6 +232,7 @@
         .apple-login-btn {
             background: black; color: white; border: none; padding: 14px 24px;
             border-radius: 12px; font-size: 16px; font-weight: 600; width: 100%; max-width: 300px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -279,10 +280,11 @@
 
     </div>
 
-    <!-- Firebase SDK (模組化) 注意這裡已經改為 signInWithRedirect -->
+    <!-- Firebase SDK (模組化) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-        import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        // 注意：這裡改回使用 signInWithPopup
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
         // ==========================================
@@ -302,7 +304,7 @@
         const db = getFirestore(app);
 
         // ==========================================
-        // 2. 禮物清單設定 & 抽獎劇本 (7份禮物) - 引號語法已修復
+        // 2. 禮物清單設定 & 抽獎劇本 (7份禮物)
         // ==========================================
         const PRIZES = [
             { name: "藍助手", sub: "藍色小奴隸一名", icon: "🙎🏻‍♂️" },         // 0
@@ -428,7 +430,6 @@
                 const userRef = doc(db, "users", currentUser.uid);
                 await setDoc(userRef, userData);
                 
-                // 語法已修復
                 document.getElementById('main-title').innerText = "恭喜你!";
                 document.getElementById('sub-title').innerHTML = `你抽中了 <b>${wonPrize.name}</b>.`;
                 document.getElementById('sub-title').style.opacity = '1';
@@ -453,12 +454,26 @@
         });
 
         // ==========================================
-        // 5. 登入系統 (改用 Redirect)
+        // 5. 登入系統 (改回 Popup 並加上除錯警告)
         // ==========================================
         document.getElementById('login-btn').addEventListener('click', () => {
-            // 加入按鈕回饋，讓使用者知道已經點擊成功
-            document.getElementById('login-btn').innerText = "跳轉登入中...";
-            signInWithRedirect(auth, new GoogleAuthProvider());
+            const loginBtn = document.getElementById('login-btn');
+            loginBtn.innerText = "開啟登入視窗中...";
+            
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider).then(() => {
+                // 登入成功，畫面會由 onAuthStateChanged 處理
+            }).catch((error) => {
+                loginBtn.innerText = "使用 Google 帳號登入";
+                
+                // 超強錯誤攔截：抓出是不是在 LINE 裡面被擋住了
+                if (error.code === 'auth/popup-blocked') {
+                    alert("⚠️ 登入視窗被瀏覽器阻擋了！\n\n如果你是從 LINE、IG 或 Messenger 打開此網頁，請點擊右上角 (或右下角) 的選單，選擇「在 Safari / 預設瀏覽器中開啟」後再試一次！");
+                } else if (error.code !== 'auth/popup-closed-by-user') {
+                    // 只要不是使用者自己關閉視窗，就顯示錯誤原因
+                    alert("登入發生錯誤：" + error.message);
+                }
+            });
         });
 
         onAuthStateChanged(auth, async (user) => {
@@ -479,6 +494,7 @@
                 document.getElementById('login-overlay').style.display = 'flex';
             }
         });
+
     </script>
 </body>
 </html>
