@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -241,19 +242,19 @@
         
         <!-- 登入遮罩 -->
         <div id="login-overlay">
-            <h1 class="main-title">國王誕大抽獎</h1>
+            <h1 class="main-title">2026國王誕大抽獎</h1>
             <p class="sub-title">請登入以同步進度</p>
             <button class="apple-login-btn" id="login-btn">使用 Google 帳號登入</button>
         </div>
 
-        <div class="header-label">國王誕大抽獎</div>
+        <div class="header-label">LUCKY DRAW</div>
         
-        <h1 class="main-title" id="main-title">Your gift awaits.</h1>
-        <p class="sub-title" id="sub-title"><span id="remaining-count">11</span> gifts remaining · tap to reveal yours</p>
+        <h1 class="main-title" id="main-title">請抽取你的生日禮物</h1>
+        <p class="sub-title" id="sub-title"><span id="remaining-count">7</span> gifts remaining · tap to reveal yours</p>
 
         <!-- 禮物網格 -->
         <div class="gifts-grid" id="gifts-grid">
-            <!-- JavaScript 將動態生成 11 個禮物項目 -->
+            <!-- JavaScript 將動態生成 7 個禮物項目 -->
         </div>
 
         <!-- 底部操作區 -->
@@ -270,11 +271,11 @@
                 <div class="result-icon" id="result-icon">☕</div>
                 <div class="result-title" id="result-title">Coffee Maker</div>
                 <div class="result-sub" id="result-sub">Nespresso Vertuo</div>
-                <button class="text-btn" onclick="location.reload()">Draw next gift &rarr;</button>
+                <button class="text-btn" onclick="location.reload()">抽下一份禮物 &rarr;</button>
             </div>
 
             <!-- 進度文字 -->
-            <div class="progress-text" id="progress-text">已獲得0份獎品</div>
+            <div class="progress-text" id="progress-text">0 of 7 份禮物已被抽取</div>
         </div>
 
     </div>
@@ -302,26 +303,21 @@
         const db = getFirestore(app);
 
         // ==========================================
-        // 2. 禮物清單設定 & 抽獎劇本
+        // 2. 禮物清單設定 & 抽獎劇本 (7份禮物)
         // ==========================================
-        // 這是畫面上「視覺顯示」的順序（從左上到右下）
+        // 畫面上「視覺顯示」的順序（從左上到右下）
         const PRIZES = [
-            { name: "AirPods Pro", sub: "Apple", icon: "🎧" },         // 0
-            { name: "Apple Watch", sub: "Series 10", icon: "⌚" },      // 1
-            { name: "iPhone 16", sub: "Pro Max", icon: "📱" },          // 2
-            { name: "MacBook Air", sub: "M3 Chip", icon: "💻" },        // 3
-            { name: "Game Controller", sub: "PlayStation", icon: "🎮" },// 4
-            { name: "圓軲轆", sub: "精美XXX", icon: "☕" }, // 5
-            { name: "師兄呀", sub: "JFFT同款", icon: "🛍️" },        // 6
-            { name: "Camera", sub: "Sony A7IV", icon: "📷" },           // 7
-            { name: "Mystery Box", sub: "Surprise!", icon: "🎁" },      // 8
-            { name: "HomePod mini", sub: "Smart Speaker", icon: "🎵" },  // 9
-            { name: "Smart Light", sub: "Philips Hue", icon: "💡" }     // 10
+            { name: “藍助手”, sub: “藍色小奴隸一名”, icon: “🙎🏻‍♂️” },         // 0
+            { name: "肩係膀頭”, sub: “生日按摩服務”, icon: “💆🏻‍♀️” },      // 1
+            { name: “意式花蜜”, sub: “意大利製花色小襪”, icon: “🍯” },          // 2
+            { name: “”,壽司郎” sub: "壽司郎本人扭蛋一粒”, icon: “🍣” }, // 3
+            { name: "命運交叉點", sub: "無印電腦支架", icon: “✖️” },      // 4
+            { name: “師兄呀”, sub: “JFFT同款禮品”, icon: “🎁” },  // 5
+            { name: “傻傻腳”, sub: “暴走2萬步鞋墊”, icon: “🦶” }     // 6
         ];
 
-        // 這是「實際中獎」的順序劇本 (填入上方 PRIZES 的對應數字)
-        // 你可以隨意修改裡面的數字順序，來決定每天會抽中哪一個
-        const drawSequence = [5, 0, 8, 2, 4, 1, 9, 7, 3, 10, 6]; 
+        // 「實際中獎」的順序劇本 (填入上方 PRIZES 的對應數字 0~6)
+        const drawSequence = [3, 0, 4, 2, 6, 1, 5]; 
 
         let currentUser = null;
         let userData = { drawCount: 0, lastDrawDate: "" };
@@ -358,8 +354,8 @@
 
         function updateTexts() {
             const claimed = userData.drawCount;
-            const remaining = 11 - claimed;
-            document.getElementById('progress-text').innerText = `${claimed} of 11 gifts claimed`;
+            const remaining = 7 - claimed;
+            document.getElementById('progress-text').innerText = `${claimed} of 7 份禮物已被抽取`;
             
             if(document.getElementById('remaining-count')) {
                 document.getElementById('remaining-count').innerText = remaining;
@@ -369,13 +365,13 @@
             const today = getTodayString();
             const drawBtn = document.getElementById('draw-btn');
             
-            if (claimed >= 11) {
-                document.getElementById('main-title').innerText = "所有禮物已經抽完!";
+            if (claimed >= 7) {
+                document.getElementById('main-title').innerText = "所有禮品已被抽完!";
                 document.getElementById('sub-title').innerText = "恭祝你福壽生日快樂wow!";
                 drawBtn.style.display = 'none';
             } else if (userData.lastDrawDate === today) {
-                document.getElementById('main-title').innerText = "請明天再來。";
-                document.getElementById('sub-title').innerText = "今天的禮物已抽完。";
+                document.getElementById('main-title').innerText = "明天再抽.";
+                document.getElementById('sub-title').innerText = "今天的禮物已抽完.";
                 drawBtn.style.opacity = '0.5';
                 drawBtn.style.pointerEvents = 'none';
             }
@@ -398,8 +394,8 @@
                 const interval = setInterval(() => {
                     if(current !== -1) document.getElementById(`gift-${current}`).classList.remove('spotlight');
                     
-                    // 隨機選一個格子
-                    current = Math.floor(Math.random() * 11);
+                    // 隨機選一個格子 (0 到 6)
+                    current = Math.floor(Math.random() * 7);
                     document.getElementById(`gift-${current}`).classList.add('spotlight');
                     
                     jumps++;
@@ -417,10 +413,10 @@
 
         document.getElementById('draw-btn').addEventListener('click', async () => {
             const today = getTodayString();
-            if (userData.lastDrawDate === today || userData.drawCount >= 11) return;
+            if (userData.lastDrawDate === today || userData.drawCount >= 7) return;
 
             // 1. 改變介面狀態為 Drawing...
-            document.getElementById('main-title').innerText = "抽取中...";
+            document.getElementById('main-title').innerText = "抽獎中...";
             document.getElementById('sub-title').style.opacity = '0';
             
             const btnText = document.getElementById('draw-btn-text');
@@ -444,8 +440,8 @@
                 await setDoc(userRef, userData);
                 
                 // 4. 顯示中獎結果 UI
-                document.getElementById('main-title').innerText = "恭喜!";
-                document.getElementById('sub-title').innerHTML = `國王成功獲得 <b>${wonPrize.name}</b>.`;
+                document.getElementById('main-title').innerText = "恭喜你!”;
+                document.getElementById('sub-title').innerHTML = `你抽中了 <b>${wonPrize.name}</b>.`;
                 document.getElementById('sub-title').style.opacity = '1';
                 
                 // 將該方塊設為 Claimed 狀態，移除 Spotlight
